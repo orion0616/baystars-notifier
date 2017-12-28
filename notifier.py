@@ -29,9 +29,7 @@ def main():
     soup = bs4.BeautifulSoup(r.text, "html.parser")
     news = ExList(soup.select("ul.newsList")[0].select("li"))
 
-    # TODO
-    # replace map with foreach
-    news.map(lambda n: News(n.select("a")[0]))
+    news.foreach(lambda n: News(n.select("a")[0]))
 
     if News.send_list:
         message = "\n\n".join(ExList(News.send_list).map(lambda news: news.__str__()))
