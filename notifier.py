@@ -2,8 +2,12 @@ import requests
 import bs4
 import os
 import json
+import sys
 import datetime
+import logging
 from exlist import ExList
+
+logger = logging.getLogger(__name__)
 
 class News:
     root = "http://www.baystars.co.jp"
@@ -25,7 +29,15 @@ class News:
             News.send_list.append(self)
 
 def main():
-    r = requests.get(News.root)
+    logging.basicConfig()
+    logging.getLogger(__name__).setLevel(level=logging.DEBUG)
+    try:
+        r = requests.get(News.root, timeout=3)
+    except requests.exceptions.Timeout:
+        logger.debug("Failed to fetch html!!")
+        sys.exit(1)
+    logger.info("Succeded to fetch html!!")
+
     soup = bs4.BeautifulSoup(r.text, "html.parser")
     news = ExList(soup.select("ul.newsList")[0].select("li"))
 
@@ -35,15 +47,20 @@ def main():
         message = "\n\n".join(ExList(News.send_list).map(lambda news: news.__str__()))
     else:
         message = "特にお知らせはありません\n"
-    print(message)
+    logger.info("Message: " + message)
 
     url = os.getenv("BAYSTARS_URL","")
 
-    requests.post(url, data = json.dumps({
+    try:
+        requests.post(url, data = json.dumps({
         'text': message, # 投稿するテキスト
         'username': u'baystars-news', # 投稿のユーザー名
         'link_names': 1, # メンションを有効にする
         }))
+    except requests.exceptions.MissingSchema:
+        logger.debug("You have not set URL...")
+        sys.exit(1)
+    logger.info("You have sent message to Slack!")
 
 def exe(event, context):
     main()
