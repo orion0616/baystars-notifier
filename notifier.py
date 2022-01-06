@@ -42,6 +42,8 @@ def crawl(num):
         r = requests.get(url, timeout=3)
     except requests.exceptions.Timeout:
         return None
+    if r.status_code == 404:
+        return None
     soup = bs4.BeautifulSoup(r.text, "html.parser")
     title = soup.find('title').text[:-15]
     if title.find("見つかりません") != -1:
@@ -70,6 +72,7 @@ def main():
     with futures.ThreadPoolExecutor(max_workers=10, thread_name_prefix="thread") as executor:
         newslist = list(executor.map(crawl, range(10)))
     text = makeText(newslist)
+    print(text)
     sendSlackMessage(text)
 
 def exe(event, context):
