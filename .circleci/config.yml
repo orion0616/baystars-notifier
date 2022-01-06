@@ -5,8 +5,8 @@ jobs:
       - image: python:3.6.3-alpine3.6
     steps:
       - run:
-        name: git install
-        command: apk add --update openssh-client git
+          name: git install
+          command: apk add --update openssh-client git
       - checkout
       - run:
           name: dependency
